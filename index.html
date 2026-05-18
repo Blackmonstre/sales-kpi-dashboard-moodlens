@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sales KPI Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">S</div>
+      <h1>Sales Intelligence</h1>
+    </div>
+    <div class="header-right">
+      <span class="badge">● LIVE</span>
+      <button class="refresh-btn" onclick="refreshData()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- FILTERS -->
+    <div class="filters">
+      <span class="filter-label">Period</span>
+      <button class="filter-btn active" onclick="setFilter(this,'period')">This Month</button>
+      <button class="filter-btn" onclick="setFilter(this,'period')">Last Quarter</button>
+      <button class="filter-btn" onclick="setFilter(this,'period')">YTD</button>
+      <button class="filter-btn" onclick="setFilter(this,'period')">Last Year</button>
+      <div class="filter-sep"></div>
+      <span class="filter-label">Region</span>
+      <select class="region-select" onchange="setRegion(this.value)">
+        <option value="all">All Regions</option>
+        <option value="na">North America</option>
+        <option value="eu">Europe</option>
+        <option value="apac">APAC</option>
+      </select>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card c1">
+        <div class="kpi-top">
+          <div class="kpi-icon">💰</div>
+          <span class="kpi-change up" id="rev-change">↑ 12.4%</span>
+        </div>
+        <div class="kpi-value" id="kpi-revenue">$2.84M</div>
+        <div class="kpi-label">Total Revenue</div>
+        <div class="kpi-sub" id="kpi-rev-sub">vs $2.53M last period</div>
+      </div>
+      <div class="kpi-card c2">
+        <div class="kpi-top">
+          <div class="kpi-icon">🤝</div>
+          <span class="kpi-change up" id="deals-change">↑ 8.1%</span>
+        </div>
+        <div class="kpi-value" id="kpi-deals">347</div>
+        <div class="kpi-label">Deals Closed</div>
+        <div class="kpi-sub" id="kpi-deals-sub">vs 321 last period</div>
+      </div>
+      <div class="kpi-card c3">
+        <div class="kpi-top">
+          <div class="kpi-icon">🎯</div>
+          <span class="kpi-change down" id="conv-change">↓ 2.3%</span>
+        </div>
+        <div class="kpi-value" id="kpi-conv">24.6%</div>
+        <div class="kpi-label">Conversion Rate</div>
+        <div class="kpi-sub" id="kpi-conv-sub">vs 26.9% last period</div>
+      </div>
+      <div class="kpi-card c4">
+        <div class="kpi-top">
+          <div class="kpi-icon">📊</div>
+          <span class="kpi-change up" id="avg-change">↑ 3.8%</span>
+        </div>
+        <div class="kpi-value" id="kpi-avg">$8.2K</div>
+        <div class="kpi-label">Avg Deal Size</div>
+        <div class="kpi-sub" id="kpi-avg-sub">vs $7.9K last period</div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Revenue & Pipeline</div>
+            <div class="chart-subtitle">Monthly breakdown with pipeline forecast</div>
+          </div>
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="setChartType(this,'bar')">Bar</button>
+            <button class="chart-tab" onclick="setChartType(this,'line')">Line</button>
+          </div>
+        </div>
+        <canvas id="revenueChart" height="200"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Revenue by Product</div>
+            <div class="chart-subtitle">Current period mix</div>
+          </div>
+        </div>
+        <canvas id="donutChart" height="180"></canvas>
+        <div class="legend" style="margin-top:14px;">
+          <div class="legend-item"><div class="legend-dot" style="background:#667eea"></div>Enterprise</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>Mid-Market</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>SMB</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#38bdf8"></div>Self-Serve</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Top Sales Reps</div>
+            <div class="chart-subtitle">Quota attainment this period</div>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table id="repsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Rep</th>
+                <th>Revenue</th>
+                <th>Quota</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="repsBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Pipeline by Stage</div>
+            <div class="chart-subtitle">Deal count & value per stage</div>
+          </div>
+        </div>
+        <canvas id="pipelineChart" height="220"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
